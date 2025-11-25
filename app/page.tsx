@@ -6,6 +6,7 @@ type Ingredient = {
   name: string;
   amount: string;
   unit?: string;
+  optional?: boolean; // 👈 NEW
 };
 
 type Recipe = {
@@ -15,6 +16,7 @@ type Recipe = {
   ingredients: Ingredient[];
   steps: string[];
   estimatedTimeMinutes?: number;
+  warnings?: string[]; // 👈 NEW
 };
 
 export default function Home() {
@@ -27,6 +29,15 @@ export default function Home() {
   const [targetServings, setTargetServings] = useState<number>(1);
   const [convertLoading, setConvertLoading] = useState(false);
   const [convertError, setConvertError] = useState<string | null>(null);
+    const handleRemoveOptionalIngredient = (index: number) => {
+    if (!oneDishRecipe) return;
+    const updated: Recipe = {
+      ...oneDishRecipe,
+      ingredients: oneDishRecipe.ingredients.filter((_, i) => i !== index),
+    };
+    setOneDishRecipe(updated);
+  };
+
 
   const handleUrlSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -312,19 +323,48 @@ export default function Home() {
                 ? ` · ~${oneDishRecipe.estimatedTimeMinutes} min`
                 : null}
             </div>
+            {oneDishRecipe.warnings && oneDishRecipe.warnings.length > 0 && (
+              <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
+                <div className="text-[12px] font-semibold text-amber-900 mb-1">
+                  OneDish notes
+                </div>
+                <ul className="text-[11px] text-amber-900 list-disc list-inside space-y-0.5">
+                  {oneDishRecipe.warnings.map((w, idx) => (
+                    <li key={idx}>{w}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div className="mt-1 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <div className="text-[12px] font-semibold text-zinc-700 mb-1">
                   Scaled ingredients
                 </div>
-                <ul className="text-[12px] text-zinc-700 list-disc list-inside space-y-0.5">
-                  {oneDishRecipe.ingredients.map((ing, idx) => (
-                    <li key={idx}>
-                      {ing.amount} {ing.unit} {ing.name}
-                    </li>
-                  ))}
-                </ul>
+<ul className="text-[12px] text-zinc-700 list-disc list-inside space-y-0.5">
+  {oneDishRecipe.ingredients.map((ing, idx) => (
+    <li key={idx} className="flex items-start gap-2">
+      <span className={ing.optional ? "italic opacity-80" : ""}>
+        {ing.amount} {ing.unit} {ing.name}
+        {ing.optional && (
+          <span className="ml-1 text-[11px] text-amber-700">
+            (optional)
+          </span>
+        )}
+      </span>
+      {ing.optional && (
+        <button
+          type="button"
+          onClick={() => handleRemoveOptionalIngredient(idx)}
+          className="text-[11px] text-zinc-500 underline hover:text-zinc-700"
+        >
+          remove
+        </button>
+      )}
+    </li>
+  ))}
+</ul>
+
               </div>
               <div>
                 <div className="text-[12px] font-semibold text-zinc-700 mb-1">
